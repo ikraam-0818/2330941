@@ -1,0 +1,9 @@
+# Importing necessary libraries
+import pandas as pd
+
+# Loading the datasets
+bank_full = pd.read_csv('/mnt/data/bank-full.csv', sep=';')
+bank_sample = pd.read_csv('/mnt/data/bank.csv', sep=';')
+
+# Display the first few rows of the full dataset for initial inspection
+bank_full.head(), bank_full.info()
