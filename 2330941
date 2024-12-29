@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score, roc_auc_score, roc_curve, confusion_matrix
 
 # Load the datasets
-bank_full = pd.read_csv('/content/drive/MyDrive/bank-full.csv', sep=';')
+bank_full = pd.read_csv('/main/bank-full.csv', sep=';')
 
 # Display basic information about the dataset
 print("Full Dataset Info:")
