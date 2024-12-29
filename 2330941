@@ -1,5 +1,15 @@
 # Importing necessary libraries
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score, roc_auc_score, roc_curve, confusion_matrix
 
 # Load the datasets
 bank_full = pd.read_csv('/content/drive/MyDrive/bank-full.csv', sep=';')
@@ -21,9 +31,6 @@ print("\nTarget Variable Distribution:")
 print(bank_full['y'].value_counts(normalize=True))
 
 # Visualize the target variable distribution
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 plt.figure(figsize=(6, 4))
 sns.countplot(x='y', data=bank_full, palette='viridis')
 plt.title("Distribution of Target Variable ('y')")
@@ -35,16 +42,12 @@ plt.show()
 numerical_columns = ['age', 'balance', 'day', 'duration', 'campaign', 'pdays', 'previous']
 
 # Visualize distributions of numerical features
-import matplotlib.pyplot as plt
-
 bank_full[numerical_columns].hist(figsize=(12, 10), bins=20, color='skyblue', edgecolor='black')
 plt.suptitle("Distributions of Numerical Attributes", fontsize=16)
 plt.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
 
 # Correlation heatmap for numerical features
-import seaborn as sns
-
 plt.figure(figsize=(10, 8))
 correlation_matrix = bank_full[numerical_columns].corr()
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
@@ -63,10 +66,7 @@ for column in categorical_columns:
     plt.ylabel(column.capitalize())
     plt.show()
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-
-# Step 5.1: Encode Categorical Variables
+# Encode Categorical Variables
 categorical_columns = ['job', 'marital', 'education', 'default', 'housing', 'loan', 'contact', 'month', 'poutcome']
 target_column = 'y'
 
@@ -77,16 +77,16 @@ bank_full[target_column] = label_encoder.fit_transform(bank_full[target_column])
 # Apply One-Hot Encoding to categorical features
 bank_full_encoded = pd.get_dummies(bank_full, columns=categorical_columns, drop_first=True)
 
-# Step 5.2: Normalize/Scale Numerical Attributes
+# Normalize/Scale Numerical Attributes
 numerical_columns = ['age', 'balance', 'day', 'duration', 'campaign', 'pdays', 'previous']
 scaler = StandardScaler()
 bank_full_encoded[numerical_columns] = scaler.fit_transform(bank_full_encoded[numerical_columns])
 
-# Step 5.3: Train-Test Split
+# Train-Test Split
 X = bank_full_encoded.drop(columns=[target_column])  # Features
 y = bank_full_encoded[target_column]  # Target
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y) # Stratified Sampling has been used
 
 # Verify the shapes of the train and test datasets
 print(f"Training Features Shape: {X_train.shape}")
@@ -94,26 +94,21 @@ print(f"Testing Features Shape: {X_test.shape}")
 print(f"Training Target Distribution:\n{y_train.value_counts(normalize=True)}")
 print(f"Testing Target Distribution:\n{y_test.value_counts(normalize=True)}")
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score, roc_auc_score, roc_curve, confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Step 6.1: Train the Random Forest Classifier
+# Train the Random Forest Classifier
 rf_model = RandomForestClassifier(random_state=42, n_estimators=100)
 rf_model.fit(X_train, y_train)
 
-# Step 6.2: Predict on Test Data
+# Predict on Test Data
 y_pred_rf = rf_model.predict(X_test)
 y_proba_rf = rf_model.predict_proba(X_test)[:, 1]
 
-# Step 6.3: Evaluate the Random Forest Model
+# Evaluate the Random Forest Model
 print("Random Forest Classification Report:")
 print(classification_report(y_test, y_pred_rf))
 print(f"Accuracy: {accuracy_score(y_test, y_pred_rf)}")
 print(f"AUC-ROC: {roc_auc_score(y_test, y_proba_rf)}")
 
-# Step 6.4: Visualize Confusion Matrix
+# Visualize Confusion Matrix for Random Forest
 conf_matrix = confusion_matrix(y_test, y_pred_rf)
 plt.figure(figsize=(6, 4))
 sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=['No', 'Yes'], yticklabels=['No', 'Yes'])
@@ -122,7 +117,7 @@ plt.xlabel("Predicted")
 plt.ylabel("Actual")
 plt.show()
 
-# Step 6.5: Plot ROC Curve
+# Plot ROC Curve
 fpr, tpr, thresholds = roc_curve(y_test, y_proba_rf)
 plt.figure(figsize=(8, 6))
 plt.plot(fpr, tpr, color='blue', label=f"AUC = {roc_auc_score(y_test, y_proba_rf):.2f}")
@@ -133,12 +128,7 @@ plt.ylabel("True Positive Rate")
 plt.legend()
 plt.show()
 
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-
-# Step 7.1: Build the Neural Network Model
+# Build the Neural Network Model
 nn_model = Sequential([
     Dense(64, input_dim=X_train.shape[1], activation='relu'),
     Dropout(0.3),
@@ -149,7 +139,7 @@ nn_model = Sequential([
 
 nn_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-# Step 7.2: Train the Neural Network Model
+# Train the Neural Network Model
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
 history = nn_model.fit(X_train, y_train, 
@@ -159,14 +149,14 @@ history = nn_model.fit(X_train, y_train,
                        callbacks=[early_stopping], 
                        verbose=1)
 
-# Step 7.3: Evaluate the Neural Network Model
+# Evaluate the Neural Network Model
 nn_loss, nn_accuracy = nn_model.evaluate(X_test, y_test)
 y_proba_nn = nn_model.predict(X_test).flatten()
 
 print(f"Neural Network Accuracy: {nn_accuracy}")
 print(f"Neural Network AUC-ROC: {roc_auc_score(y_test, y_proba_nn)}")
 
-# Step 7.4: Plot Training History
+# Plot Training History
 plt.figure(figsize=(8, 6))
 plt.plot(history.history['accuracy'], label='Train Accuracy')
 plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
@@ -178,7 +168,7 @@ plt.ylabel("Accuracy/Loss")
 plt.legend()
 plt.show()
 
-# Step 7.5: Plot ROC Curve
+# Plot ROC Curve
 fpr_nn, tpr_nn, _ = roc_curve(y_test, y_proba_nn)
 plt.figure(figsize=(8, 6))
 plt.plot(fpr_nn, tpr_nn, color='green', label=f"AUC = {roc_auc_score(y_test, y_proba_nn):.2f}")
@@ -189,12 +179,10 @@ plt.ylabel("True Positive Rate")
 plt.legend()
 plt.show()
 
-from sklearn.metrics import confusion_matrix, classification_report
-
 # Convert predicted probabilities to binary predictions (threshold = 0.5)
 y_pred_nn = (y_proba_nn >= 0.5).astype(int)
 
-# Generate confusion matrix
+# Confusion matrix for Neural Network
 conf_matrix_nn = confusion_matrix(y_test, y_pred_nn)
 
 # Display confusion matrix
